@@ -3868,7 +3868,7 @@ class SparseCheckoutTests(PorcelainTestCase):
             self.assertIn("src/foo*.py", lines)
 
 
-class ConeModeSparseCheckoutTests(PorcelainTestCase):
+class ConeModeTests(PorcelainTestCase):
     """Provide integration tests for Dulwich's cone mode sparse checkout.
 
     This test suite verifies the expected behavior for:
@@ -3944,7 +3944,7 @@ class ConeModeSparseCheckoutTests(PorcelainTestCase):
             lines = [ln.strip() for ln in f if ln.strip()]
 
         self.assertIn("/*", lines)
-        self.assertIn("!/*", lines)
+        self.assertIn("!/*/", lines)
 
         config = self.repo.get_config()
         self.assertEqual(config.get((b"core",), b"sparseCheckout"), b"true")
