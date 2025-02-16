@@ -34,7 +34,7 @@ import tempfile
 import threading
 import time
 from io import BytesIO, StringIO
-from unittest import skipIf
+from unittest import skip, skipIf
 
 from dulwich import porcelain
 from dulwich.diff_tree import tree_changes
@@ -3699,8 +3699,7 @@ class SparseCheckoutTests(PorcelainTestCase):
     # Utility/Placeholder
     #
     def sparse_checkout(self, repo, patterns, force=False):
-        """
-        Wrapper around the actual porcelain.sparse_checkout function
+        """Wrapper around the actual porcelain.sparse_checkout function
         to handle any test-specific setup or logging.
         """
         return porcelain.sparse_checkout(repo, patterns, force=force)
@@ -3720,8 +3719,7 @@ class SparseCheckoutTests(PorcelainTestCase):
         commit(self.repo_path, message=b"Added " + rel_path.encode("utf-8"))
 
     def _list_wtree_files(self):
-        """
-        Return a set of all files (not dirs) present
+        """Return a set of all files (not dirs) present
         in the working tree, ignoring .git/.
         """
         found_files = set()
@@ -3739,10 +3737,9 @@ class SparseCheckoutTests(PorcelainTestCase):
     # -- Test Cases --
     #
     def test_TC_SC_001_only_included_paths_appear_in_wtree(self):
-        """
-        TC-SC-001:
-          Verify that only included paths (per Sparse_Checkout_File)
-          remain in the working tree, while excluded paths do not.
+        """TC-SC-001:
+        Verify that only included paths (per Sparse_Checkout_File)
+        remain in the working tree, while excluded paths do not.
         """
         self._commit_file("keep_me.txt", "I'll stay\n")
         self._commit_file("exclude_me.txt", "I'll be excluded\n")
@@ -3759,11 +3756,10 @@ class SparseCheckoutTests(PorcelainTestCase):
         )
 
     def test_TC_SC_002_previously_included_paths_become_excluded(self):
-        """
-        TC-SC-002:
-          Confirm that previously included (checked out) files
-          become excluded (skip-worktree bit set)
-          after patterns change to remove them.
+        """TC-SC-002:
+        Confirm that previously included (checked out) files
+        become excluded (skip-worktree bit set)
+        after patterns change to remove them.
         """
         self._commit_file("data/included_1.txt", "some content\n")
         self._commit_file("data/included_2.txt", "other content\n")
@@ -3784,11 +3780,10 @@ class SparseCheckoutTests(PorcelainTestCase):
         self.assertTrue(entry.skip_worktree)
 
     def test_TC_SC_003_force_removes_local_changes_for_excluded_paths(self):
-        """
-        TC-SC-003:
-          Verify that forced enablement of sparse checkout
-          removes local modifications for newly excluded paths
-          only when 'force=True'.
+        """TC-SC-003:
+        Verify that forced enablement of sparse checkout
+        removes local modifications for newly excluded paths
+        only when 'force=True'.
         """
         self._commit_file("file1.txt", "original content\n")
 
@@ -3807,10 +3802,9 @@ class SparseCheckoutTests(PorcelainTestCase):
         )
 
     def test_TC_SC_004_destructive_refuse_uncommitted_changes_without_force(self):
-        """
-        TC-SC-004:
-          Destructive operation should fail if uncommitted changes
-          exist for newly excluded paths and we do NOT pass force=True.
+        """TC-SC-004:
+        Destructive operation should fail if uncommitted changes
+        exist for newly excluded paths and we do NOT pass force=True.
         """
         self._commit_file("config.yaml", "initial\n")
         cfg_path = os.path.join(self.repo_path, "config.yaml")
@@ -3822,10 +3816,9 @@ class SparseCheckoutTests(PorcelainTestCase):
             self.sparse_checkout(self.repo, exclude_patterns, force=False)
 
     def test_TC_SC_005_fnmatch_gitignore_pattern_expansion(self):
-        """
-        TC-SC-005:
-          Confirm that reading/writing of patterns aligns
-          with gitignore-style or fnmatch expansions (*, ?, etc.).
+        """TC-SC-005:
+        Confirm that reading/writing of patterns aligns
+        with gitignore-style or fnmatch expansions (*, ?, etc.).
         """
         self._commit_file("src/foo.py", "print('hello')\n")
         self._commit_file("src/foo_test.py", "print('test')\n")
@@ -3845,39 +3838,37 @@ class SparseCheckoutTests(PorcelainTestCase):
 
         sc_file = os.path.join(self.repo_path, ".git", "info", "sparse-checkout")
         self.assertTrue(os.path.isfile(sc_file))
-        with open(sc_file, "r") as f:
+        with open(sc_file) as f:
             lines = f.read().strip().split()
             self.assertIn("src/foo*.py", lines)
 
 
-@unittest.skip("Cone mode is not developed yet but tests are written in advance.")
+@skip("Cone mode is not developed yet but tests are written in advance.")
 class ConeModeSparseCheckoutTests(PorcelainTestCase):
-    """
-    Integration tests for Dulwich's cone mode sparse checkout.
+    """Provide integration tests for Dulwich's cone mode sparse checkout.
 
-    PRD TCs:
-      - TC-CONE-001
-      - TC-CONE-002
-      - TC-CONE-003
-      - TC-CONE-004
-      - TC-CONE-005
+    This test suite verifies the expected behavior for:
+      * cone_mode_init
+      * cone_mode_set
+      * cone_mode_add
+    Although Dulwich does not yet implement cone mode, these tests are
+    prepared in advance to guide future development.
     """
 
     def setUp(self):
-        super().setUp()
-        # self.test_dir and self.repo_path have been created by PorcelainTestCase
-        # self.repo is a Repo at self.repo_path
+        """Set up a fresh repository for each test.
 
-        # For convenience, define a small helper to commit files
-        # to the test repo.
-        # We can re-use your existing `_commit_file` from above tests
-        # if desired, or define a short version here.
-        pass
+        This method creates a new empty repo_path and Repo object
+        as provided by the PorcelainTestCase base class.
+        """
+        super().setUp()
 
     def _commit_file(self, rel_path, content=b"contents"):
-        """
-        Write a file in rel_path with `content`,
-        and commit to the test repository.
+        """Add a file at the given relative path and commit it.
+
+        Creates necessary directories, writes the file content,
+        stages, and commits. The commit message and author/committer
+        are also provided.
         """
         full_path = os.path.join(self.repo_path, rel_path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
@@ -3892,31 +3883,31 @@ class ConeModeSparseCheckoutTests(PorcelainTestCase):
         )
 
     def _list_wtree_files(self):
-        """Return a set of all file paths (rel to repo) in the working tree."""
+        """Return a set of all file paths relative to the repository root.
+
+        Walks the working tree, skipping the .git directory.
+        """
         found_files = set()
         for root, dirs, files in os.walk(self.repo_path):
             if ".git" in dirs:
-                dirs.remove(".git")  # skip .git
+                dirs.remove(".git")
             for fn in files:
-                # Relative to repo_path
                 relp = os.path.relpath(os.path.join(root, fn), self.repo_path)
                 found_files.add(relp)
         return found_files
 
-    def test_TC_CONE_001_init_excludes_everything(self):
+    def test_init_excludes_everything(self):
+        """Verify that cone_mode_init writes minimal patterns and empties the working tree.
+
+        Make some dummy files, commit them, then call cone_mode_init. Confirm
+        that the working tree is empty, the sparse-checkout file has the
+        minimal patterns (/*, !/*), and the relevant config values are set.
         """
-        TC-CONE-001:
-          Verify cone_mode_init writes the minimal pattern set (/*, !/*),
-          sets config, and empties the working tree.
-        """
-        # Make some dummy files and commit them
         self._commit_file("docs/readme.md", b"# doc\n")
         self._commit_file("src/main.py", b"print('hello')\n")
 
-        # Step 1: call cone_mode_init
         porcelain.cone_mode_init(self.repo)
 
-        # Step 2: working tree should be empty
         actual_files = self._list_wtree_files()
         self.assertEqual(
             set(),
@@ -3924,36 +3915,31 @@ class ConeModeSparseCheckoutTests(PorcelainTestCase):
             "cone_mode_init did not exclude all files from the working tree.",
         )
 
-        # Step 3: check .git/info/sparse-checkout
         sp_path = os.path.join(self.repo_path, ".git", "info", "sparse-checkout")
-        with open(sp_path, "r") as f:
+        with open(sp_path) as f:
             lines = [ln.strip() for ln in f if ln.strip()]
 
         self.assertIn("/*", lines)
         self.assertIn("!/*", lines)
 
-        # Step 4: check config
         config = self.repo.get_config()
         self.assertEqual(config.get((b"core",), b"sparseCheckout"), b"true")
         self.assertEqual(config.get((b"core",), b"sparseCheckoutCone"), b"true")
 
-    def test_TC_CONE_002_set_specific_dirs(self):
-        """
-        TC-CONE-002:
-          Verify cone_mode_set overwrites the included directory list,
-          re-including only the specified directories and excluding everything else.
-        """
-        # 1) Initialize cone mode (exclude everything)
-        porcelain.cone_mode_init(self.repo)
+    def test_set_specific_dirs(self):
+        """Verify that cone_mode_set overwrites the included directories to only the specified ones.
 
-        # 2) Add some files in different dirs, commit them
+        Initializes cone mode, commits some files, then calls cone_mode_set with
+        a list of directories. Expects that only those directories remain in the
+        working tree.
+        """
+        porcelain.cone_mode_init(self.repo)
         self._commit_file("docs/readme.md", b"# doc\n")
         self._commit_file("src/main.py", b"print('hello')\n")
         self._commit_file("tests/test_foo.py", b"# tests\n")
 
-        # By default, everything is still excluded since we've not re-included anything.
+        # Everything is still excluded initially by init.
 
-        # 3) Now call cone_mode_set with a list of directories
         porcelain.cone_mode_set(self.repo, dirs=["docs", "src"])
 
         actual_files = self._list_wtree_files()
@@ -3964,112 +3950,95 @@ class ConeModeSparseCheckoutTests(PorcelainTestCase):
             "Did not see only the 'docs/' and 'src/' dirs in the working tree.",
         )
 
-        # Check .git/info/sparse-checkout lines
         sp_path = os.path.join(self.repo_path, ".git", "info", "sparse-checkout")
-        with open(sp_path, "r") as f:
+        with open(sp_path) as f:
             lines = [ln.strip() for ln in f if ln.strip()]
 
-        # The minimal lines + new lines for docs, src:
-        # /*
-        # !/*
-        # !/docs/*
-        # !/docs/**
-        # !/src/*
-        # !/src/**
         self.assertIn("!/docs/*", lines)
         self.assertIn("!/docs/**", lines)
         self.assertIn("!/src/*", lines)
         self.assertIn("!/src/**", lines)
         self.assertNotIn("!/tests/*", lines)
 
-    def test_TC_CONE_003_set_overwrites_old_dirs(self):
-        """
-        TC-CONE-003:
-          Confirm that calling cone_mode_set again overwrites old re-include patterns.
+    def test_set_overwrites_old_dirs(self):
+        """Ensure that calling cone_mode_set again overwrites old includes.
+
+        Initializes cone mode, includes two directories, then calls
+        cone_mode_set again with a different directory to confirm the
+        new set of includes replaces the old.
         """
         porcelain.cone_mode_init(self.repo)
-        # Add some files
         self._commit_file("docs/readme.md")
         self._commit_file("src/main.py")
         self._commit_file("tests/test_bar.py")
 
-        # Re-include docs, src
         porcelain.cone_mode_set(self.repo, dirs=["docs", "src"])
         self.assertEqual({"docs/readme.md", "src/main.py"}, self._list_wtree_files())
 
-        # Next, call cone_mode_set with *only* tests
+        # Overwrite includes, now only 'tests'
         porcelain.cone_mode_set(self.repo, dirs=["tests"], force=True)
 
-        # Now only 'tests/test_bar.py' should remain
         actual_files = self._list_wtree_files()
         expected_files = {"tests/test_bar.py"}
         self.assertEqual(expected_files, actual_files)
 
-    def test_TC_CONE_004_force_removal_of_local_mods(self):
-        """
-        TC-CONE-004:
-          If force=True, cone_mode_set or init should remove local changes in excluded paths
-          without error. Confirm that no CheckoutError is raised, and the file is removed.
+    def test_force_removal_of_local_mods(self):
+        """Confirm that force=True removes local changes in excluded paths.
+
+        cone_mode_init and cone_mode_set are called, a file is locally modified,
+        and then cone_mode_set is called again with force=True to exclude that path.
+        The excluded file should be removed with no CheckoutError.
         """
         porcelain.cone_mode_init(self.repo)
-        # Include "docs"
         porcelain.cone_mode_set(self.repo, dirs=["docs"])
 
         self._commit_file("docs/readme.md", b"Docs stuff\n")
         self._commit_file("src/main.py", b"print('hello')\n")
 
-        # Now we want to 'force' removing src/ changes by switching to a new set
-        # of included dirs that excludes src.
-
-        # But let's first modify src/main.py
+        # Modify src/main.py
         with open(os.path.join(self.repo_path, "src/main.py"), "ab") as f:
             f.write(b"extra line\n")
 
-        # If force=False, we'd expect a CheckoutError (like in normal sparse mode).
-        # But we want to confirm that force=True removes it with no error.
+        # Exclude src/ with force=True
         porcelain.cone_mode_set(self.repo, dirs=["docs"], force=True)
 
-        # Check that 'src/main.py' is gone from the working tree
         actual_files = self._list_wtree_files()
         expected_files = {"docs/readme.md"}
         self.assertEqual(expected_files, actual_files)
 
-    def test_TC_CONE_005_add_and_merge_dirs(self):
+    def test_add_and_merge_dirs(self):
+        """Verify that cone_mode_add merges new directories instead of overwriting them.
+
+        After initializing cone mode and including a single directory, call
+        cone_mode_add with a new directory. Confirm that both directories
+        remain included. Repeat for an additional directory to ensure it
+        is merged, not overwritten.
         """
-        TC-CONE-005:
-          Confirm that using cone_mode_add merges new directories with existing ones
-          rather than overwriting them entirely.
-        """
-        # 1) Initialize cone mode
         porcelain.cone_mode_init(self.repo)
-        # 2) Add some files
         self._commit_file("docs/readme.md", b"# doc\n")
         self._commit_file("src/main.py", b"print('hello')\n")
         self._commit_file("tests/test_bar.py", b"# tests\n")
 
-        # 3) cone_mode_set to re-include "docs"
+        # Include "docs" only
         porcelain.cone_mode_set(self.repo, dirs=["docs"])
         self.assertEqual({"docs/readme.md"}, self._list_wtree_files())
 
-        # 4) Now add "src" via cone_mode_add (should keep docs included)
+        # Add "src"
         porcelain.cone_mode_add(self.repo, dirs=["src"])
         actual_files = self._list_wtree_files()
-        expected_files = {"docs/readme.md", "src/main.py"}
-        self.assertEqual(expected_files, actual_files)
+        self.assertEqual({"docs/readme.md", "src/main.py"}, actual_files)
 
-        # 5) Add "tests" as well, merging again
+        # Add "tests" as well
         porcelain.cone_mode_add(self.repo, dirs=["tests"])
         actual_files = self._list_wtree_files()
         expected_files = {"docs/readme.md", "src/main.py", "tests/test_bar.py"}
         self.assertEqual(expected_files, actual_files)
 
-        # Check lines in .git/info/sparse-checkout
+        # Check .git/info/sparse-checkout
         sp_path = os.path.join(self.repo_path, ".git", "info", "sparse-checkout")
-        with open(sp_path, "r") as f:
+        with open(sp_path) as f:
             lines = [ln.strip() for ln in f if ln.strip()]
 
-        # Expect to see lines for !/docs/*, !/docs/**, !/src/*, !/src/**, !/tests/*, ...
         self.assertIn("!/docs/*", lines)
         self.assertIn("!/src/*", lines)
         self.assertIn("!/tests/*", lines)
-        # If we re-run, we still see docs, src, tests all listed.
