@@ -2256,6 +2256,10 @@ def compute_included_paths_cone(repo, lines):
     return included
 
 
+from pysnooper import snoop
+
+
+@snoop(depth=2)
 def apply_included_paths(repo, included_paths, force=False):
     """
     Given a set of included paths, update skip-worktree bits in the index
@@ -2695,7 +2699,7 @@ def cone_mode_init(repo):
     config.write_to_path()
 
     patterns = ["/*", "!/*/"]  # root-level files only
-    sparse_checkout(repo, patterns, force=True)
+    sparse_checkout(repo, patterns, force=True, cone=True)
 
 
 def cone_mode_set(repo, dirs, force=False):
@@ -2719,7 +2723,7 @@ def cone_mode_set(repo, dirs, force=False):
             new_patterns.append(f"!/{d}/")
 
     # Finally, apply the patterns and update the working tree
-    sparse_checkout(repo, new_patterns, force=force)
+    sparse_checkout(repo, new_patterns, force=force, cone=True)
 
 
 def cone_mode_add(repo, dirs, force=False):
@@ -2736,11 +2740,11 @@ def cone_mode_add(repo, dirs, force=False):
 
     for d in dirs:
         d = d.strip("/")
-        line = f"/{d}/"
+        line = f"!/{d}/"
         if line not in existing:
             existing.append(line)
 
-    sparse_checkout(repo, existing, force=force)
+    sparse_checkout(repo, existing, force=force, cone=True)
 
 
 def check_mailmap(repo, contact):

@@ -36,6 +36,8 @@ import time
 from io import BytesIO, StringIO
 from unittest import skipIf
 
+from pysnooper import snoop
+
 from dulwich import porcelain
 from dulwich.diff_tree import tree_changes
 from dulwich.errors import CommitError
@@ -3966,10 +3968,6 @@ class ConeModeTests(PorcelainTestCase):
 
         porcelain.cone_mode_set(self.repo, dirs=["docs", "src"])
 
-        # At this point, the test checks which files are actually in the working tree.
-        # It's empty instead of containing docs/readme.md and src/main.py, indicating
-        # that cone_mode_set(...) did not properly update the sparse-checkout patterns
-        # or re-check them out so that these files would appear.
         actual_files = self._list_wtree_files()
         expected_files = {"docs/readme.md", "src/main.py"}
         self.assertEqual(
@@ -3982,11 +3980,17 @@ class ConeModeTests(PorcelainTestCase):
         with open(sp_path) as f:
             lines = [ln.strip() for ln in f if ln.strip()]
 
-        self.assertIn("!/docs/*", lines)
-        self.assertIn("!/docs/**", lines)
-        self.assertIn("!/src/*", lines)
-        self.assertIn("!/src/**", lines)
-        self.assertNotIn("!/tests/*", lines)
+        # For standard cone mode, we'd expect lines like:
+        #    /*           (include top-level files)
+        #    !/*/         (exclude subdirectories)
+        #    !/docs/      (re-include docs)
+        #    !/src/       (re-include src)
+        # Instead of the wildcard-based lines the old test used.
+        self.assertIn("/*", lines)
+        self.assertIn("!/*/", lines)
+        self.assertIn("!/docs/", lines)
+        self.assertIn("!/src/", lines)
+        self.assertNotIn("!/tests/", lines)
 
     def test_set_overwrites_old_dirs(self):
         """Ensure that calling cone_mode_set again overwrites old includes.
@@ -4067,6 +4071,12 @@ class ConeModeTests(PorcelainTestCase):
         with open(sp_path) as f:
             lines = [ln.strip() for ln in f if ln.strip()]
 
-        self.assertIn("!/docs/*", lines)
-        self.assertIn("!/src/*", lines)
-        self.assertIn("!/tests/*", lines)
+        # Standard cone mode lines:
+        # "/*"    -> include top-level
+        # "!/*/"  -> exclude subdirectories
+        # "!/docs/", "!/src/", "!/tests/" -> re-include the directories we added
+        self.assertIn("/*", lines)
+        self.assertIn("!/*/", lines)
+        self.assertIn("!/docs/", lines)
+        self.assertIn("!/src/", lines)
+        self.assertIn("!/tests/", lines)
