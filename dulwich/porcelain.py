@@ -2149,10 +2149,11 @@ def sparse_checkout(repo, patterns=None, force=False, cone=None):
     # --- 0) Possibly infer 'cone' from config ---
     if cone is None:
         config = repo.get_config()
-        sc_cone = config.get((b"core",), b"sparseCheckoutCone")
-        if sc_cone == b"true":
-            cone = True
-        else:
+        try:
+            sc_cone = config.get((b"core",), b"sparseCheckoutCone")
+            cone = sc_cone == b"true"
+        except KeyError:
+            # If core.sparseCheckoutCone is not set, default to False
             cone = False
 
     # --- 1) Read or write patterns ---
@@ -2599,7 +2600,7 @@ def match_gitignore_patterns(path_str, parsed_patterns, path_is_dir=False):
         else:
             # Not anchored: we can do a simple wildcard match or a substring match.
             # For simplicity, let's use Python's fnmatch:
-            matched = fnmatch(path_str, pattern)
+            matched = fnmatch.fnmatch(path_str, pattern)
 
         if matched:
             # If negation is True, that means 'exclude'. If negation is False, 'include'.
