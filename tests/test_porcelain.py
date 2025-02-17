@@ -3925,7 +3925,7 @@ class ConeModeTests(PorcelainTestCase):
 
         Make some dummy files, commit them, then call cone_mode_init. Confirm
         that the working tree is empty, the sparse-checkout file has the
-        minimal patterns (/*, !/*), and the relevant config values are set.
+        minimal patterns (/*, !/*/), and the relevant config values are set.
         """
         self._commit_file("docs/readme.md", b"# doc\n")
         self._commit_file("src/main.py", b"print('hello')\n")
@@ -3966,6 +3966,10 @@ class ConeModeTests(PorcelainTestCase):
 
         porcelain.cone_mode_set(self.repo, dirs=["docs", "src"])
 
+        # At this point, the test checks which files are actually in the working tree.
+        # It's empty instead of containing docs/readme.md and src/main.py, indicating
+        # that cone_mode_set(...) did not properly update the sparse-checkout patterns
+        # or re-check them out so that these files would appear.
         actual_files = self._list_wtree_files()
         expected_files = {"docs/readme.md", "src/main.py"}
         self.assertEqual(
